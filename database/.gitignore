@@ -1,0 +1,49 @@
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.sql.backup
+*.dump
+*.sql.gz
+
+# Database data directories
+postgres_data/
+pgdata/
+mysql_data/
+data/
+
+# Connection test files (if they contain sensitive info)
+# Uncomment if test_connection.sql contains credentials
+# test_connection.sql
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+Desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Documentation (keep only essential)
+*.md
+
+# Backup files
+*.backup
+*.old
+*.orig
+

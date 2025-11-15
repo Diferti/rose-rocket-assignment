@@ -1,0 +1,94 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+postgres_data/
+pgdata/
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Documentation and unnecessary files
+*.md
+!README.md
+*.pdf
+*.doc
+*.docx
+*.txt
+!LICENSE.txt
+!CHANGELOG.txt
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+.cache/
+
+# Build and dist directories
+dist/
+build/
+out/
+.next/
+.vercel/
+
+# Coverage and testing
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Misc
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
