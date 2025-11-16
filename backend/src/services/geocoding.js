@@ -66,12 +66,12 @@ export const geocodeLocation = async (location) => {
     throw new Error('City and country are required for geocoding');
   }
 
-  // Build query string
-  const query = buildGeocodingQuery(city, state_province, postal_code, country);
-  
   try {
     // Try geocoding with postal code first (if provided)
     let response;
+    let query = buildGeocodingQuery(city, state_province, postal_code, country);
+    let usedPostalCode = !!postal_code; // Track if we actually used postal code in final query
+    
     if (postal_code) {
       try {
         response = await axios.get(NOMINATIM_BASE_URL, {
@@ -85,9 +85,29 @@ export const geocodeLocation = async (location) => {
             'User-Agent': 'ShipmentQuoteCalculator/1.0', // Required by Nominatim
           },
         });
+        
+        // If no results with postal code, try fallback
+        if (!response.data || response.data.length === 0) {
+          console.warn(`Geocoding with postal code "${postal_code}" returned no results, trying without postal code`);
+          // Fallback to city + state if postal code returns no results
+          const fallbackQuery = buildGeocodingQuery(city, state_province, null, country);
+          response = await axios.get(NOMINATIM_BASE_URL, {
+            params: {
+              q: fallbackQuery,
+              format: 'json',
+              limit: 1,
+              addressdetails: 1,
+            },
+            headers: {
+              'User-Agent': 'ShipmentQuoteCalculator/1.0',
+            },
+          });
+          query = fallbackQuery; // Update query for error message
+          usedPostalCode = false; // We didn't use postal code in final query
+        }
       } catch (error) {
         console.warn('Geocoding with postal code failed, trying without:', error.message);
-        // Fallback to city + state if postal code fails
+        // Fallback to city + state if postal code API call fails
         const fallbackQuery = buildGeocodingQuery(city, state_province, null, country);
         response = await axios.get(NOMINATIM_BASE_URL, {
           params: {
@@ -100,6 +120,8 @@ export const geocodeLocation = async (location) => {
             'User-Agent': 'ShipmentQuoteCalculator/1.0',
           },
         });
+        query = fallbackQuery; // Update query for error message
+        usedPostalCode = false; // We didn't use postal code in final query
       }
     } else {
       // No postal code, use city + state
@@ -133,8 +155,8 @@ export const geocodeLocation = async (location) => {
       );
     }
 
-    // Determine accuracy level
-    const accuracy = postal_code ? 'postal_code' : (state_province ? 'city_state' : 'city_only');
+    // Determine accuracy level based on what we actually used
+    const accuracy = usedPostalCode ? 'postal_code' : (state_province ? 'city_state' : 'city_only');
 
     return {
       latitude,

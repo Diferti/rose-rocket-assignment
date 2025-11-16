@@ -108,16 +108,17 @@ export const validateQuote = [
     .withMessage('Equipment type must be: dry van, reefer, or flatbed'),
 
   body('total_weight')
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Total weight must be a positive number'),
+    .notEmpty()
+    .withMessage('Total weight is required')
+    .isFloat({ gt: 0 })
+    .withMessage('Total weight must be greater than 0'),
 
   body('pickup_date')
-    .optional()
+    .notEmpty()
+    .withMessage('Pickup date is required')
     .isISO8601()
     .withMessage('Pickup date must be a valid ISO 8601 date (YYYY-MM-DD)')
     .custom((value) => {
-      if (!value) return true;
       const date = new Date(value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);

@@ -4,16 +4,36 @@ import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { format as formatDate } from 'date-fns';
 import { QuoteRequest, Location } from '@/lib/api';
 import { popularCities, PopularCity, formatCityName } from '@/data/popularCities';
+
+// Helper to parse a local Date from 'yyyy-MM-dd' (avoids UTC offset issues)
+const parseLocalDate = (value?: string): Date | null => {
+  if (!value) return null;
+  const parts = value.split('-');
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts.map((p) => Number(p));
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+};
 
 interface QuoteFormProps {
   onSubmit: (quote: QuoteRequest) => Promise<void>;
   isLoading?: boolean;
 }
 
+// Form state uses space-separated equipment types for display
+interface QuoteFormData {
+  origin: Location;
+  destination: Location;
+  equipment_type: 'dry van' | 'reefer' | 'flatbed' | 'step deck' | 'hotshot' | 'straight truck';
+  total_weight?: number;
+  pickup_date?: string;
+}
+
 export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProps) {
-  const [formData, setFormData] = useState<QuoteRequest>({
+  const [formData, setFormData] = useState<QuoteFormData>({
     origin: {
       city: '',
       country: 'CA',
@@ -114,8 +134,28 @@ export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProp
     if (!formData.destination.city.trim()) {
       newErrors['destination.city'] = 'Destination city is required';
     }
-    if (formData.origin.city === formData.destination.city) {
+    // Allow same city if postal codes are both provided and different.
+    const sameCountry = formData.origin.country === formData.destination.country;
+    const sameCity =
+      formData.origin.city.trim().toLowerCase() ===
+      formData.destination.city.trim().toLowerCase();
+    const originPostal = formData.origin.postal_code?.trim().toUpperCase() || '';
+    const destPostal = formData.destination.postal_code?.trim().toUpperCase() || '';
+    const bothPostalProvided = originPostal !== '' && destPostal !== '';
+    const samePostalWhenProvided = bothPostalProvided && originPostal === destPostal;
+
+    if (sameCountry && sameCity && (!bothPostalProvided || samePostalWhenProvided)) {
       newErrors['destination.city'] = 'Destination must be different from origin';
+    }
+
+    // Require total_weight > 0
+    if (formData.total_weight === undefined || formData.total_weight === null || formData.total_weight <= 0) {
+      newErrors['total_weight'] = 'Total weight is required';
+    }
+
+    // Require pickup_date
+    if (!formData.pickup_date) {
+      newErrors['pickup_date'] = 'Pickup date is required';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -129,12 +169,17 @@ export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProp
       finalWeight = finalWeight * 2.20462; // Convert kg to lbs
     }
 
+    // Convert equipment type from space-separated to underscore-separated format
+    // (e.g., 'dry van' -> 'dry_van', 'straight truck' -> 'straight_truck')
+    const normalizedEquipmentType = formData.equipment_type.replace(/\s+/g, '_');
+
+    // Clean up optional fields - convert empty strings to undefined
     const submitData: QuoteRequest = {
       ...formData,
+      equipment_type: normalizedEquipmentType as 'dry_van' | 'reefer' | 'flatbed' | 'step_deck' | 'hotshot' | 'straight_truck',
       total_weight: finalWeight,
-      pickup_date: formData.pickup_date
-        ? new Date(formData.pickup_date).toISOString().split('T')[0]
-        : undefined,
+      // pickup_date is already stored as local 'yyyy-MM-dd'
+      pickup_date: formData.pickup_date,
     };
 
     await onSubmit(submitData);
@@ -403,9 +448,7 @@ export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProp
 
       {/* Equipment Type Selection */}
       <div>
-        <label className="block text-sm font-medium text-[#4E3B31] mb-3">
-          Equipment Type <span className="text-red-500">*</span>
-        </label>
+        <label className="block text-sm font-bold text-[#4E3B31] mb-3">Equipment Type</label>
         <div className="grid grid-cols-3 gap-3">
           {equipmentTypes.map((equipment) => (
             <button
@@ -423,10 +466,19 @@ export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProp
                   : 'border-[#C8A27A] bg-white hover:border-[#A67C52]'
               }`}
             >
-              <div className="flex flex-col items-center text-center">
-                <span className="text-3xl mb-2">{equipment.icon}</span>
-                <div className="font-medium text-[#4E3B31]">{equipment.name}</div>
-                <div className="text-xs text-[#4E3B31] opacity-80 mt-1">{equipment.description}</div>
+              <div className="flex items-center gap-4 text-left">
+                {/* Equipment icon image (convert id with spaces to underscores) */}
+                <Image
+                  src={`/icons/${equipment.id.replace(/\s+/g, '_')}.png`}
+                  alt={equipment.name}
+                  width={44}
+                  height={44}
+                  className="object-contain shrink-0"
+                />
+                <div>
+                  <div className="font-bold text-[#4E3B31] leading-5">{equipment.name}</div>
+                  <div className="text-xs font-medium text-[#4E3B31] opacity-80 mt-0.5">{equipment.description}</div>
+                </div>
               </div>
               {formData.equipment_type === equipment.id && (
                 <div className="absolute top-2 right-2 w-5 h-5 bg-[#4E3B31] rounded-full flex items-center justify-center">
@@ -454,25 +506,32 @@ export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProp
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Weight Input with Unit Selector */}
         <div>
-          <label className="block text-sm font-medium text-[#4E3B31] mb-1.5">
+          <label className="block text-sm font-bold text-[#4E3B31] mb-1.5">
             Total Weight
           </label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.total_weight || ''}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  total_weight: e.target.value ? parseFloat(e.target.value) : undefined,
-                }))
-              }
-              placeholder="0.00"
-              className="flex-1 px-3 py-2.5 rounded-md border border-[#C8A27A] bg-white text-[#4E3B31] placeholder-[#C8A27A] text-sm focus:outline-none focus:ring-1 focus:ring-[#A67C52] focus:border-[#A67C52]"
-            />
-            <div className="flex rounded-md border border-[#C8A27A] overflow-hidden">
+          <div className="flex items-start gap-2">
+            <div className="flex-1">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.total_weight || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    total_weight: e.target.value ? parseFloat(e.target.value) : undefined,
+                  }))
+                }
+                placeholder="0.00"
+                className={`w-full px-3 py-2.5 rounded-md border bg-white text-[#4E3B31] placeholder-[#C8A27A] text-sm focus:outline-none focus:ring-1 focus:ring-[#A67C52] ${
+                  errors['total_weight'] ? 'border-red-300' : 'border-[#C8A27A] focus:border-[#A67C52]'
+                }`}
+              />
+              {errors['total_weight'] && (
+                <p className="mt-1 text-xs text-red-600">{errors['total_weight']}</p>
+              )}
+            </div>
+            <div className="flex rounded-md border border-[#C8A27A] overflow-hidden shrink-0 whitespace-nowrap">
               <button
                 type="button"
                 onClick={() => setWeightUnit('kg')}
@@ -501,23 +560,29 @@ export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProp
 
         {/* Pickup Date Calendar */}
         <div>
-          <label className="block text-sm font-medium text-[#4E3B31] mb-1.5">
+          <label className="block text-sm font-bold text-[#4E3B31] mb-1.5">
             Pickup Date
           </label>
           <DatePicker
-            selected={formData.pickup_date ? new Date(formData.pickup_date) : null}
+            selected={parseLocalDate(formData.pickup_date)}
             onChange={(date: Date | null) =>
               setFormData((prev) => ({
                 ...prev,
-                pickup_date: date ? date.toISOString().split('T')[0] : undefined,
+                // Store as local date string to avoid UTC offset issues
+                pickup_date: date ? formatDate(date, 'yyyy-MM-dd') : undefined,
               }))
             }
             minDate={new Date()}
             dateFormat="MMMM dd, yyyy"
             placeholderText="Select pickup date"
-            className="w-full px-3 py-2.5 rounded-md border border-[#C8A27A] bg-white text-[#4E3B31] placeholder-[#C8A27A] text-sm focus:outline-none focus:ring-1 focus:ring-[#A67C52] focus:border-[#A67C52]"
+            className={`w-full px-3 py-2.5 rounded-md border bg-white text-[#4E3B31] placeholder-[#C8A27A] text-sm focus:outline-none focus:ring-1 focus:ring-[#A67C52] ${
+              errors['pickup_date'] ? 'border-red-300' : 'border-[#C8A27A] focus:border-[#A67C52]'
+            }`}
             calendarClassName="rounded-md shadow-lg border border-[#C8A27A]"
           />
+          {errors['pickup_date'] && (
+            <p className="mt-1 text-xs text-red-600">{errors['pickup_date']}</p>
+          )}
         </div>
       </div>
 

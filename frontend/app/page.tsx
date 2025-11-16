@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { QuoteRequest, QuoteResponse, quoteAPI } from '@/lib/api';
 import QuoteForm from '@/components/QuoteForm';
 import QuoteResult from '@/components/QuoteResult';
@@ -13,6 +13,37 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'quote' | 'history'>('quote');
   const [isFromHistory, setIsFromHistory] = useState(false);
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  const sidebarContainerRef = useRef<HTMLDivElement>(null);
+
+  // Match sidebar height to form height
+  useEffect(() => {
+    const matchHeights = () => {
+      if (formContainerRef.current && sidebarContainerRef.current) {
+        const formHeight = formContainerRef.current.offsetHeight;
+        sidebarContainerRef.current.style.height = `${formHeight}px`;
+      }
+    };
+
+    matchHeights();
+    window.addEventListener('resize', matchHeights);
+    
+    // Use MutationObserver to watch for form height changes
+    const observer = new MutationObserver(matchHeights);
+    if (formContainerRef.current) {
+      observer.observe(formContainerRef.current, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+      });
+    }
+
+    return () => {
+      window.removeEventListener('resize', matchHeights);
+      observer.disconnect();
+    };
+  }, [error, isLoading]);
 
   const handleSubmit = async (quoteData: QuoteRequest) => {
     setIsLoading(true);
@@ -25,10 +56,24 @@ export default function Home() {
       setIsFromHistory(false); // New quote, not from history
       setActiveTab('quote'); // Show result
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : (err as { response?: { data?: { message?: string } } })?.response?.data?.message 
-        || 'Failed to calculate quote. Please try again.';
+      let errorMessage = 'Failed to calculate quote. Please try again.';
+      
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { data?: { message?: string; errors?: Array<{ msg: string; param: string }> } } };
+        if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        }
+        // Show validation errors if available
+        if (axiosError.response?.data?.errors && Array.isArray(axiosError.response.data.errors)) {
+          const validationErrors = axiosError.response.data.errors
+            .map((e: { msg: string; param: string }) => `${e.param}: ${e.msg}`)
+            .join(', ');
+          errorMessage = `Validation error: ${validationErrors}`;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -82,7 +127,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white border border-[#4E3B31] rounded-lg overflow-hidden shadow-sm">
+            <div ref={formContainerRef} className="bg-white border border-[#4E3B31] rounded-lg overflow-hidden shadow-sm">
               <div className="bg-[#4E3B31] px-6 py-4">
                 <h2 className="text-xl font-semibold text-white text-center">
                   Calculate New Quote
@@ -115,8 +160,8 @@ export default function Home() {
           {/* Right Column - Result & History */}
           <div className="lg:col-span-1">
             {/* Tabs */}
-            <div className="bg-white border border-[#4E3B31] rounded-lg overflow-hidden shadow-sm">
-              <div className="flex border-b border-[#4E3B31]">
+            <div ref={sidebarContainerRef} className="bg-white border border-[#4E3B31] rounded-lg overflow-hidden shadow-sm flex flex-col">
+              <div className="flex border-b border-[#4E3B31] flex-shrink-0">
                 <button
                   onClick={() => setActiveTab('quote')}
                   className={`flex-1 py-3 px-4 text-center font-bold text-md transition-colors ${
@@ -140,8 +185,8 @@ export default function Home() {
               </div>
 
               {/* Tab Content */}
-              <div className="flex flex-col h-[600px] overflow-hidden bg-white border-t-0">
-                <div className="flex-1 flex flex-col overflow-y-auto p-6">
+              <div className="flex flex-col overflow-hidden bg-white border-t-0 flex-1 min-h-0">
+                <div className="flex-1 flex flex-col overflow-y-auto p-6 min-h-0">
                   {activeTab === 'quote' ? (
                     <div className="flex-1">
                       {isLoading && !currentQuote ? (
@@ -184,7 +229,7 @@ export default function Home() {
                       )}
                     </div>
                   ) : (
-                    <div className="flex-1">
+                    <div className="flex-1 min-h-0">
                       <QuoteHistory onQuoteClick={handleQuoteClick} />
                     </div>
                   )}

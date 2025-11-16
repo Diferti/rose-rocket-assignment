@@ -20,7 +20,7 @@ export interface Location {
 export interface QuoteRequest {
   origin: Location;
   destination: Location;
-  equipment_type: 'dry van' | 'reefer' | 'flatbed' | 'step deck' | 'hotshot' | 'straight truck';
+  equipment_type: 'dry_van' | 'reefer' | 'flatbed' | 'step_deck' | 'hotshot' | 'straight_truck';
   total_weight?: number;
   pickup_date?: string;
 }
@@ -31,10 +31,18 @@ export interface Quote {
   origin_postal_code?: string;
   origin_state_province?: string;
   origin_country: string;
+  origin_coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   destination_city: string;
   destination_postal_code?: string;
   destination_state_province?: string;
   destination_country: string;
+  destination_coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   lane: string;
   equipment_type: string;
   total_weight?: number;
