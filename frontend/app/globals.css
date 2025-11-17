@@ -87,3 +87,8 @@ body .react-datepicker .react-datepicker__day[aria-disabled="true"] {
   color: #A67C52 !important;
 }
 
+/* Hide Leaflet attribution */
+.leaflet-control-attribution {
+  display: none !important;
+}
+

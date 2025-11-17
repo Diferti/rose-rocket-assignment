@@ -15,6 +15,7 @@ export default function QuoteHistory({ onQuoteClick }: QuoteHistoryProps) {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Helper function to safely format quote amount
   const formatQuoteAmount = (amount: number | string | undefined): string => {
@@ -51,6 +52,38 @@ export default function QuoteHistory({ onQuoteClick }: QuoteHistoryProps) {
     loadQuotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
+
+  // Filter quotes based on search query
+  const filteredQuotes = quotes.filter((quote) => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    
+    // Format pickup date for searching (multiple formats)
+    const pickupDateFormats = quote.pickup_date ? [
+      format(new Date(quote.pickup_date), 'MMM dd, yyyy'), // "Jan 15, 2024"
+      format(new Date(quote.pickup_date), 'MMMM dd, yyyy'), // "January 15, 2024"
+      format(new Date(quote.pickup_date), 'MMM dd'), // "Jan 15"
+      format(new Date(quote.pickup_date), 'yyyy-MM-dd'), // "2024-01-15"
+      format(new Date(quote.pickup_date), 'MM/dd/yyyy'), // "01/15/2024"
+      format(new Date(quote.pickup_date), 'dd/MM/yyyy'), // "15/01/2024"
+    ] : [];
+    
+    const searchableText = [
+      quote.origin_city,
+      quote.origin_state_province,
+      quote.destination_city,
+      quote.destination_state_province,
+      quote.lane,
+      quote.equipment_type.replace(/_/g, ' '),
+      formatQuoteAmount(quote.quote_amount),
+      formatDistance(quote.distance_miles),
+      quote.total_weight?.toString(),
+      ...pickupDateFormats,
+    ].filter(Boolean).join(' ').toLowerCase();
+    
+    return searchableText.includes(query);
+  });
 
   if (loading && quotes.length === 0) {
     return (
@@ -102,22 +135,67 @@ export default function QuoteHistory({ onQuoteClick }: QuoteHistoryProps) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex items-center justify-between mb-6 px-2">
-        <h3 className="text-lg font-bold text-[#4E3B31]">Recent Quotes</h3>
-        <button
-          onClick={loadQuotes}
-          className="p-2 text-[#A67C52] hover:bg-[#F7F3EF] rounded-md transition-colors"
-          title="Refresh"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
+      <div className="mb-4 px-2">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-[#4E3B31]">Recent Quotes</h3>
+          <button
+            onClick={loadQuotes}
+            className="p-2 text-[#A67C52] hover:bg-[#F7F3EF] rounded-md transition-colors"
+            title="Refresh"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Search Input */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by city, route, equipment, amount..."
+            className="w-full px-4 py-2.5 pl-10 rounded-md border border-[#C8A27A] bg-white text-[#4E3B31] placeholder-[#C8A27A] text-sm focus:outline-none focus:ring-1 focus:ring-[#A67C52] focus:border-[#A67C52]"
+          />
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+            <svg className="w-5 h-5 text-[#A67C52]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#A67C52] hover:text-[#4E3B31]"
+              title="Clear search"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <div className="mt-2 text-xs text-[#A67C52] px-1">
+            {filteredQuotes.length === 0 
+              ? 'No quotes found' 
+              : `Found ${filteredQuotes.length} ${filteredQuotes.length === 1 ? 'quote' : 'quotes'}`}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-2">
         <div className="space-y-4">
-        {quotes.map((quote) => (
+        {filteredQuotes.length === 0 && searchQuery ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <svg className="w-12 h-12 text-[#C8A27A] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <p className="text-[#4E3B31] font-medium">No quotes match your search</p>
+            <p className="text-[#A67C52] text-sm mt-1">Try different keywords</p>
+          </div>
+        ) : (
+          filteredQuotes.map((quote) => (
           <div
             key={quote.id}
             onClick={() => onQuoteClick?.(quote.id)}
@@ -131,6 +209,7 @@ export default function QuoteHistory({ onQuoteClick }: QuoteHistoryProps) {
                   width={24}
                   height={24}
                   className="object-contain"
+                  unoptimized
                 />
                 <div>
                   <div className="font-semibold text-[#4E3B31] text-sm">{quote.lane}</div>
@@ -171,7 +250,8 @@ export default function QuoteHistory({ onQuoteClick }: QuoteHistoryProps) {
               )}
             </div>
           </div>
-        ))}
+          ))
+        )}
         </div>
       </div>
 

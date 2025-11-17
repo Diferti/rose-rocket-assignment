@@ -1,14 +1,64 @@
 import { query } from '../config/database.js';
+import axios from 'axios';
 
 /**
- * Calculate distance between two coordinates using PostGIS
+ * Calculate driving distance using OpenRouteService API (free tier)
+ * Falls back to PostGIS great-circle distance if API fails
  * @param {number} originLat 
  * @param {number} originLon 
  * @param {number} destLat 
  * @param {number} destLon 
  * @returns {Promise<Object>} - { distance_km, distance_miles }
  */
-export const calculateDistance = async (originLat, originLon, destLat, destLon) => {
+const calculateDrivingDistance = async (originLat, originLon, destLat, destLon) => {
+  // Using public OSRM instance (completely free, no rate limits)
+  // OSRM expects coordinates as path parameter: lon,lat;lon,lat
+  const coordinates = `${originLon},${originLat};${destLon},${destLat}`;
+  const OSRM_BASE_URL = `https://router.project-osrm.org/route/v1/driving/${coordinates}`;
+  
+  try {
+    const response = await axios.get(OSRM_BASE_URL, {
+      params: {
+        overview: 'false', // We only need distance, not full route
+        geometries: 'geojson'
+      },
+      timeout: 5000, // 5 second timeout
+    });
+
+    if (response.data && response.data.routes && response.data.routes.length > 0) {
+      // Distance is returned in meters
+      const distanceMeters = response.data.routes[0].distance;
+      const distanceKm = distanceMeters / 1000.0;
+      const distanceMiles = distanceKm * 0.621371;
+
+      return {
+        distance_km: parseFloat(distanceKm.toFixed(2)),
+        distance_miles: parseFloat(distanceMiles.toFixed(2)),
+      };
+    } else {
+      throw new Error('No route found in API response');
+    }
+  } catch (error) {
+    if (error.response) {
+      console.warn(`OSRM API error: ${error.response.status} - ${error.response.statusText}`);
+    } else if (error.code === 'ECONNABORTED') {
+      console.warn('OSRM API timeout, falling back to great-circle distance');
+    } else {
+      console.warn(`OSRM API error: ${error.message}`);
+    }
+    throw error; // Re-throw to trigger fallback
+  }
+};
+
+/**
+ * Calculate great-circle distance using PostGIS (fallback method)
+ * @param {number} originLat 
+ * @param {number} originLon 
+ * @param {number} destLat 
+ * @param {number} destLon 
+ * @returns {Promise<Object>} - { distance_km, distance_miles }
+ */
+const calculateGreatCircleDistance = async (originLat, originLon, destLat, destLon) => {
   try {
     const result = await query(
       `SELECT 
@@ -32,8 +82,32 @@ export const calculateDistance = async (originLat, originLon, destLat, destLon) 
       distance_miles: parseFloat(result.rows[0].distance_miles),
     };
   } catch (error) {
-    console.error('Distance calculation error:', error);
+    console.error('PostGIS distance calculation error:', error);
     throw new Error(`Failed to calculate distance: ${error.message}`);
+  }
+};
+
+/**
+ * Calculate distance between two coordinates
+ * Tries driving distance first, falls back to great-circle distance
+ * @param {number} originLat 
+ * @param {number} originLon 
+ * @param {number} destLat 
+ * @param {number} destLon 
+ * @returns {Promise<Object>} - { distance_km, distance_miles }
+ */
+export const calculateDistance = async (originLat, originLon, destLat, destLon) => {
+  // Try driving distance first (more accurate for shipping quotes)
+  try {
+    const drivingDistance = await calculateDrivingDistance(originLat, originLon, destLat, destLon);
+    console.log(`Using driving distance: ${drivingDistance.distance_km} km`);
+    return drivingDistance;
+  } catch (error) {
+    // Fall back to great-circle distance if driving distance API fails
+    console.warn('Falling back to great-circle distance calculation');
+    const greatCircleDistance = await calculateGreatCircleDistance(originLat, originLon, destLat, destLon);
+    console.log(`Using great-circle distance: ${greatCircleDistance.distance_km} km`);
+    return greatCircleDistance;
   }
 };
 

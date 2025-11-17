@@ -474,6 +474,7 @@ export default function QuoteForm({ onSubmit, isLoading = false }: QuoteFormProp
                   width={44}
                   height={44}
                   className="object-contain shrink-0"
+                  unoptimized
                 />
                 <div>
                   <div className="font-bold text-[#4E3B31] leading-5">{equipment.name}</div>
