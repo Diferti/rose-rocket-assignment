@@ -230,6 +230,7 @@ The root `package.json` provides the following scripts:
 - **`npm run dev:frontend`** - Start only the frontend server
 - **`npm run docker:up`** - Start Docker containers
 - **`npm run docker:down`** - Stop Docker containers
+- **`npm run docker:reset`** - Reset database (stops containers, removes volumes, starts fresh)
 - **`npm run docker:logs`** - View Docker container logs
 
 **Note:** Running `npm run dev` automatically:
@@ -259,6 +260,9 @@ npm run docker:up
 # Stop database
 npm run docker:down
 
+# Reset database (removes all data and starts fresh)
+npm run docker:reset
+
 # View database logs
 npm run docker:logs
 
@@ -266,7 +270,9 @@ npm run docker:logs
 docker-compose exec postgres psql -U postgres -d shipment_quotes -c "SELECT PostGIS_version();"
 ```
 
-**Note:** The database schema is automatically initialized when the container starts for the first time. The initialization scripts are located in `database/init/`.
+**Note:** 
+- The database schema is automatically initialized when the container starts for the first time. The initialization scripts are located in `database/init/`.
+- Docker volumes persist data across container restarts. Use `npm run docker:reset` to completely wipe the database and start fresh (useful for testing or development).
 
 ## 💻 Usage
 
