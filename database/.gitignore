@@ -12,10 +12,6 @@ pgdata/
 mysql_data/
 data/
 
-# Connection test files (if they contain sensitive info)
-# Uncomment if test_connection.sql contains credentials
-# test_connection.sql
-
 # Logs
 *.log
 logs/
@@ -38,12 +34,6 @@ Desktop.ini
 *.tmp
 *.temp
 *.bak
-
-# Documentation (keep only essential)
-*.md
-
-# Backup files
 *.backup
 *.old
 *.orig
-

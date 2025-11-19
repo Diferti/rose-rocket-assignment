@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # Dependencies
 /node_modules
 /.pnp
@@ -9,9 +7,6 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
 # Testing
 /coverage
@@ -62,18 +57,16 @@ Desktop.ini
 *.sublime-project
 *.sublime-workspace
 
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+
 # Misc
 *.pem
 *.tmp
 *.temp
 *.bak
-.cache/
-.eslintcache
-.stylelintcache
-
-# Documentation (keep only essential)
-*.md
-!README.md
 
 # Storybook
 storybook-static/

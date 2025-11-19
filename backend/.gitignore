@@ -1,8 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
 # Environment variables
 .env
@@ -49,10 +46,6 @@ coverage/
 *.lcov
 .jest/
 
-# Documentation (keep only essential)
-*.md
-!README.md
-
 # Temporary files
 *.tmp
 *.temp
@@ -64,4 +57,3 @@ coverage/
 *.pid
 *.seed
 *.pid.lock
-

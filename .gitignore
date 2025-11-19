@@ -12,6 +12,9 @@
 *.sqlite3
 postgres_data/
 pgdata/
+*.sql.backup
+*.dump
+*.sql.gz
 
 # Dependencies
 node_modules/
@@ -53,29 +56,13 @@ yarn-error.log*
 lerna-debug.log*
 pnpm-debug.log*
 
-# Documentation and unnecessary files
-*.md
-!README.md
-*.pdf
-*.doc
-*.docx
-*.txt
-!LICENSE.txt
-!CHANGELOG.txt
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.cache
-.cache/
-
 # Build and dist directories
 dist/
 build/
 out/
 .next/
 .vercel/
+*.tsbuildinfo
 
 # Coverage and testing
 coverage/
@@ -85,10 +72,18 @@ coverage/
 
 # Docker
 docker-compose.override.yml
-.dockerignore
 
-# Misc
-*.tsbuildinfo
+# Cache
+.cache/
 .eslintcache
 .stylelintcache
 
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Misc
+*.pid
+*.seed
+*.pid.lock

@@ -1,80 +1,162 @@
 # Shipment Quote Calculator - Backend API
 
-Node.js/Express backend for the Shipment Quote Calculator application.
+Node.js/Express RESTful API backend for the Shipment Quote Calculator application. Provides endpoints for quote calculation, geocoding, distance calculation, and quote history management.
 
-## Features
+## 📋 Table of Contents
 
-- ✅ PostgreSQL database connection with connection pooling
-- ✅ RESTful API endpoints for quotes
-- ✅ Input validation with express-validator
-- ✅ Geocoding service (OpenStreetMap Nominatim)
-- ✅ Distance calculation using PostGIS
-- ✅ Quote calculation with equipment type and weight multipliers
-- ✅ Comprehensive error handling
-- ✅ North America region validation
-- ✅ Pagination support
+- [Features](#features)
+- [Technologies](#technologies)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Server](#running-the-server)
+- [API Endpoints](#api-endpoints)
+- [Project Structure](#project-structure)
+- [Services](#services)
+- [Error Handling](#error-handling)
+- [Validation](#validation)
+- [Additional Resources](#additional-resources)
 
-## Prerequisites
+## ✨ Features
+
+- ✅ **PostgreSQL Integration** - Connection pooling, PostGIS for geographic calculations, prepared statements
+- ✅ **RESTful API** - JSON endpoints with consistent responses and pagination support
+- ✅ **Input Validation** - express-validator with postal code, country, equipment type, and date validation
+- ✅ **Geocoding Service** - OpenStreetMap Nominatim integration with postal code priority and city fallback
+- ✅ **Distance Calculation** - OSRM driving distance (primary) with PostGIS great-circle fallback
+- ✅ **Quote Calculation** - Distance-based pricing with equipment type multipliers and weight adjustments
+- ✅ **Error Handling** - Centralized error handling with consistent response format and HTTP status codes
+
+## 🛠 Technologies
+
+- **Node.js** (v18+) - JavaScript runtime
+- **Express.js** - Web framework
+- **PostgreSQL** - Database (via `pg` library)
+- **PostGIS** - Spatial database extension
+- **express-validator** - Input validation
+- **axios** - HTTP client for external APIs
+- **dotenv** - Environment variable management
+- **cors** - Cross-origin resource sharing
+- **nodemon** - Development auto-reload
+
+**Why these technologies?**
+- **Express.js**: Lightweight, flexible, and widely adopted. Perfect for REST APIs.
+- **PostgreSQL + PostGIS**: Industry standard for geographic data. PostGIS provides powerful spatial functions.
+- **express-validator**: Robust validation that integrates seamlessly with Express middleware.
+
+## 📋 Prerequisites
 
 - Node.js (v18 or higher)
 - PostgreSQL with PostGIS extension
-- Database set up (see main project README)
+- Database running (see main project README for setup)
 
-## Installation
+## 📦 Installation
 
-1. **Install dependencies:**
+1. **Navigate to backend directory:**
+   ```bash
+   cd backend
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Set up environment variables:**
+3. **Set up environment variables:**
    ```bash
    cp .env.example .env
    ```
-   
-   Edit `.env` with your database credentials:
-   ```env
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=shipment_quotes
-   DB_USER=postgres
-   DB_PASSWORD=postgres
-   PORT=3000
-   ```
 
-3. **Make sure database is running:**
+4. **Edit `.env` file** with your configuration (see [Configuration](#configuration))
+
+5. **Ensure database is running:**
    ```bash
-   # If using Docker:
+   # From project root
    docker-compose up -d
    ```
 
-## Running the Server
+## ⚙️ Configuration
 
-**Development mode (with auto-reload):**
+Create a `.env` file in the `backend` directory:
+
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=shipment_quotes
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# Server Configuration
+PORT=3000
+
+# Quote Calculation Settings
+BASE_RATE_PER_MILE=2.00
+MINIMUM_QUOTE=100.00
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_HOST` | PostgreSQL host | `localhost` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_NAME` | Database name | `shipment_quotes` |
+| `DB_USER` | Database username | `postgres` |
+| `DB_PASSWORD` | Database password | `postgres` |
+| `PORT` | Server port | `3000` |
+| `BASE_RATE_PER_MILE` | Base rate per mile | `2.00` |
+| `MINIMUM_QUOTE` | Minimum quote amount | `100.00` |
+
+## 🚀 Running the Server
+
+### Development Mode
+
 ```bash
 npm run dev
 ```
 
-**Production mode:**
+This starts the server with `nodemon` for automatic reloading on file changes.
+
+### Production Mode
+
 ```bash
 npm start
 ```
 
-The server will start on `http://localhost:3000`
+The server will start on `http://localhost:3000` (or the port specified in `.env`).
 
-## API Endpoints
+## 📡 API Endpoints
 
 ### Health Check
-```
-GET /health
-```
+
 Check server and database connection status.
 
-### Create Quote
+```http
+GET /health
 ```
+
+**Response:**
+```json
+{
+  "success": true,
+  "status": "healthy",
+  "database": "connected",
+  "timestamp": "2024-03-10T12:00:00.000Z"
+}
+```
+
+### Create Quote
+
+Create a new shipment quote.
+
+```http
 POST /api/quotes
 Content-Type: application/json
+```
 
+**Request Body:**
+```json
 {
   "origin": {
     "city": "Toronto",
@@ -88,48 +170,199 @@ Content-Type: application/json
     "state_province": "BC",
     "country": "CA"
   },
-  "equipment_type": "dry van",
+  "equipment_type": "dry_van",
   "total_weight": 10000,
   "pickup_date": "2024-03-15"
 }
 ```
 
-### Get All Quotes
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Quote created successfully",
+  "data": {
+    "id": 1,
+    "origin_city": "Toronto",
+    "origin_postal_code": "M5H 2N2",
+    "origin_state_province": "ON",
+    "origin_country": "CA",
+    "destination_city": "Vancouver",
+    "destination_postal_code": "V6B 1A1",
+    "destination_state_province": "BC",
+    "destination_country": "CA",
+    "equipment_type": "dry_van",
+    "total_weight": 10000,
+    "pickup_date": "2024-03-15",
+    "distance_miles": 2756.23,
+    "distance_kilometers": 4435.67,
+    "quote_amount": 5512.46,
+    "created_at": "2024-03-10T12:00:00.000Z",
+    "origin_coordinates": {
+      "latitude": 43.6532,
+      "longitude": -79.3832
+    },
+    "destination_coordinates": {
+      "latitude": 49.2827,
+      "longitude": -123.1207
+    },
+    "geocoding_accuracy": {
+      "origin": "postal_code",
+      "destination": "postal_code"
+    }
+  }
+}
 ```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "success": false,
+  "error": "Validation error",
+  "message": "Origin city is required"
+}
+```
+
+### Get All Quotes
+
+Retrieve all quotes with pagination.
+
+```http
 GET /api/quotes?page=1&limit=10
 ```
 
-### Get Quote by ID
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10, max: 100)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "origin_city": "Toronto",
+      "destination_city": "Vancouver",
+      "quote_amount": 5512.46,
+      "created_at": "2024-03-10T12:00:00.000Z",
+      ...
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 50,
+    "totalPages": 5
+  }
+}
 ```
+
+### Get Quote by ID
+
+Retrieve a specific quote by ID.
+
+```http
 GET /api/quotes/:id
 ```
 
-## Project Structure
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    ...
+  }
+}
+```
+
+**Error Response (404 Not Found):**
+```json
+{
+  "success": false,
+  "error": "Not found",
+  "message": "Quote with ID 1 not found"
+}
+```
+
+## 📁 Project Structure
 
 ```
 backend/
 ├── src/
 │   ├── config/
-│   │   └── database.js          # Database connection
+│   │   └── database.js          # PostgreSQL connection pool
 │   ├── controllers/
-│   │   └── quoteController.js    # Quote business logic
+│   │   └── quoteController.js   # Quote request handlers
 │   ├── middleware/
-│   │   ├── errorHandler.js       # Error handling
-│   │   └── validation.js         # Input validation
+│   │   ├── errorHandler.js      # Centralized error handling
+│   │   └── validation.js        # Input validation rules
 │   ├── routes/
-│   │   └── quoteRoutes.js        # API routes
+│   │   └── quoteRoutes.js       # API route definitions
 │   ├── services/
-│   │   ├── geocoding.js          # Geocoding service
-│   │   └── quoteCalculator.js   # Quote calculation
-│   └── server.js                 # Express app setup
-├── .env.example                  # Environment variables template
+│   │   ├── geocoding.js         # Geocoding service (Nominatim)
+│   │   └── quoteCalculator.js   # Quote calculation logic
+│   └── server.js                # Express app setup
+├── .env.example                 # Environment variables template
+├── .env                         # Your environment variables (not in git)
 ├── package.json
 └── README.md
 ```
 
-## Error Handling
+## 🔧 Services
 
-The API uses consistent error responses:
+### Geocoding Service
+
+Located in `src/services/geocoding.js`:
+
+- **Function**: `geocodeLocation(location)`
+- **Purpose**: Convert location (city, postal code) to coordinates
+- **Service**: OpenStreetMap Nominatim
+- **Features**:
+  - Prioritizes postal code for accuracy
+  - Falls back to city + state if postal code fails
+  - Validates coordinates are within North America
+  - Returns accuracy level (postal_code, city_state, city_only)
+
+### Quote Calculator Service
+
+Located in `src/services/quoteCalculator.js`:
+
+- **Function**: `calculateDistance(originLat, originLon, destLat, destLon)`
+  - Tries OSRM driving distance first
+  - Falls back to PostGIS great-circle distance
+  - Returns distance in miles and kilometers
+
+- **Function**: `calculateQuoteAmount(distanceMiles, equipmentType, totalWeight)`
+  - Calculates base quote from distance
+  - Applies equipment type multiplier
+  - Adds weight-based pricing (if over 10,000 lbs)
+  - Enforces minimum quote
+
+**Quote Calculation Formula:**
+```
+baseQuote = distance_miles × BASE_RATE_PER_MILE
+quoteAfterEquipment = baseQuote × equipmentMultiplier
+quoteWithWeight = quoteAfterEquipment + weightFactor
+finalQuote = max(quoteWithWeight, MINIMUM_QUOTE)
+```
+
+**Equipment Multipliers:**
+- `dry_van`: 1.0x (base)
+- `reefer`: 1.2x (+20%)
+- `flatbed`: 1.15x (+15%)
+- `step_deck`: 1.20x (+20%)
+- `hotshot`: 0.85x (-15%)
+- `straight_truck`: 0.95x (-5%)
+
+**Weight Pricing:**
+- Base threshold: 10,000 lbs
+- Additional: $0.10 per 100 lbs over threshold
+
+## ⚠️ Error Handling
+
+All errors follow a consistent format:
 
 ```json
 {
@@ -139,83 +372,42 @@ The API uses consistent error responses:
 }
 ```
 
-## Validation
+**Error Types:**
+- `Validation error` - Input validation failed (400)
+- `Geocoding error` - Failed to geocode location (400)
+- `Distance calculation error` - Failed to calculate distance (500)
+- `Not found` - Resource not found (404)
+- `Database error` - Database operation failed (500)
+- `Internal server error` - Unexpected error (500)
 
-All inputs are validated using express-validator:
-- Postal code format validation (US, Canadian, Mexican)
-- North America country validation
-- Equipment type validation
-- Date validation
-- Required field validation
+## ✅ Validation
 
-## Geocoding
+All inputs are validated using `express-validator`:
 
-Uses OpenStreetMap Nominatim (free, no API key needed):
-- Prioritizes postal code for accuracy
-- Falls back to city + state if postal code fails
-- Validates coordinates are within North America
+### Location Validation
+- **City**: Required, non-empty string
+- **Postal Code**: Optional, validated by country format:
+  - US: `^\d{5}(-\d{4})?$` (5 digits or ZIP+4)
+  - CA: `^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$` (A1A 1A1 format)
+  - MX: `^\d{5}$` (5 digits)
+- **State/Province**: Optional, non-empty string
+- **Country**: Required, must be 'US', 'CA', or 'MX'
 
-## Quote Calculation
+### Quote Validation
+- **Equipment Type**: Required, must be one of:
+  - `dry_van`, `reefer`, `flatbed`, `step_deck`, `hotshot`, `straight_truck`
+- **Total Weight**: Required, must be > 0
+- **Pickup Date**: Required, must be valid date, must be in the future
 
-Formula:
-```
-baseQuote = distance_miles × baseRatePerMile
-quoteAmount = baseQuote × equipmentMultiplier + (weight × weightRate)
-finalQuote = max(quoteAmount, minimumQuote)
-```
+## 📚 Additional Resources
 
-Equipment multipliers:
-- Dry van: 1.0x
-- Reefer: 1.2x
-- Flatbed: 1.15x
+- [Express.js Documentation](https://expressjs.com/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [PostGIS Documentation](https://postgis.net/documentation/)
+- [express-validator Documentation](https://express-validator.github.io/docs/)
+- [OpenStreetMap Nominatim](https://nominatim.org/)
+- [OSRM Routing](http://project-osrm.org/)
+---
 
-## Testing
-
-Test the API with curl or Postman:
-
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# Create quote
-curl -X POST http://localhost:3000/api/quotes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "origin": {
-      "city": "Toronto",
-      "postal_code": "M5H 2N2",
-      "state_province": "ON",
-      "country": "CA"
-    },
-    "destination": {
-      "city": "Vancouver",
-      "postal_code": "V6B 1A1",
-      "state_province": "BC",
-      "country": "CA"
-    },
-    "equipment_type": "dry van",
-    "total_weight": 10000
-  }'
-```
-
-## Environment Variables
-
-- `DB_HOST` - Database host (default: localhost)
-- `DB_PORT` - Database port (default: 5432)
-- `DB_NAME` - Database name (default: shipment_quotes)
-- `DB_USER` - Database user (default: postgres)
-- `DB_PASSWORD` - Database password (default: postgres)
-- `PORT` - Server port (default: 3000)
-- `BASE_RATE_PER_MILE` - Base rate per mile (default: 2.00)
-- `MINIMUM_QUOTE` - Minimum quote amount (default: 100.00)
-- `WEIGHT_RATE_PER_POUND` - Rate per pound (default: 0.01)
-
-## Next Steps
-
-- Add authentication/authorization
-- Add rate limiting
-- Add request logging
-- Add unit tests
-- Add integration tests
-- Add API documentation (Swagger/OpenAPI)
-
+For frontend documentation, see [../frontend/README.md](../frontend/README.md)  
+For main project documentation, see [../README.md](../README.md)
