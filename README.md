@@ -148,8 +148,10 @@ rose-rocket-assignment/
 │   └── README.md
 │
 ├── scripts/                # Utility scripts
+│   ├── setup-env.js        # Auto-creates .env files on first run
 │   └── wait-for-db.js      # Database readiness checker
 │
+├── Dockerfile.postgres     # Custom PostgreSQL image with PostGIS (ARM64 compatible)
 ├── docker-compose.yml      # Docker configuration for PostgreSQL/PostGIS
 ├── package.json            # Root package.json (orchestrates all services)
 ├── PROJECT_PLAN.md         # Development plan and requirements
@@ -165,7 +167,8 @@ Before you begin, ensure you have the following installed:
 - **Docker Desktop** - [Download](https://www.docker.com/products/docker-desktop/)
 - **Git** - [Download](https://git-scm.com/)
 
-**Important:** Make sure Docker Desktop is running before executing `npm run dev`.
+**Important:** 
+- Make sure Docker Desktop is running before executing `npm run dev`
 
 ## 🚀 Quick Start
 
@@ -187,6 +190,8 @@ This will automatically install:
 - Backend dependencies
 - Frontend dependencies
 
+**Note:** Environment files (`.env` and `.env.local`) are automatically created when you run `npm run dev` - no manual configuration needed!
+
 ### 3. Start Everything
 
 ```bash
@@ -194,12 +199,15 @@ npm run dev
 ```
 
 This single command will:
-- ✅ Start Docker containers (PostgreSQL database)
+- ✅ Automatically create `.env` files if they don't exist
+- ✅ Start Docker containers (PostgreSQL database with PostGIS)
 - ✅ Wait for the database to be ready
 - ✅ Start the backend server on `http://localhost:3000`
 - ✅ Start the frontend server on `http://localhost:3001`
 
 **That's it!** The application is now running. Open your browser and navigate to [http://localhost:3001](http://localhost:3001)
+
+**Note:** The first time you run `npm run dev`, environment files (`.env` and `.env.local`) will be automatically created with the correct configuration. You can manually edit these files later if needed.
 
 ### 4. Stop Everything
 
@@ -216,14 +224,18 @@ Or press `Ctrl+C` in the terminal where `npm run dev` is running.
 The root `package.json` provides the following scripts:
 
 - **`npm install`** - Installs all dependencies (root, backend, and frontend)
-- **`npm run dev`** - Starts everything (Docker, backend, and frontend)
+- **`npm run setup:env`** - Creates `.env` files for backend and frontend
+- **`npm run dev`** - Starts everything (creates .env files, Docker, backend, and frontend)
 - **`npm run dev:backend`** - Start only the backend server
 - **`npm run dev:frontend`** - Start only the frontend server
 - **`npm run docker:up`** - Start Docker containers
 - **`npm run docker:down`** - Stop Docker containers
 - **`npm run docker:logs`** - View Docker container logs
 
-**Note:** Running `npm run dev` automatically handles Docker startup and waits for the database to be ready before starting the backend and frontend services.
+**Note:** Running `npm run dev` automatically:
+- Creates `.env` files if they don't exist (backend/.env and frontend/.env.local)
+- Handles Docker startup with a custom PostGIS-enabled PostgreSQL image (ARM64 compatible)
+- Waits for the database to be ready before starting the backend and frontend services
 
 ## 📖 Database Setup
 
@@ -250,7 +262,7 @@ npm run docker:down
 # View database logs
 npm run docker:logs
 
-# Verify database is running
+# Verify database is running and PostGIS is installed
 docker-compose exec postgres psql -U postgres -d shipment_quotes -c "SELECT PostGIS_version();"
 ```
 

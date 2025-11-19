@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
-    "dev": "npm run docker:up && node scripts/wait-for-db.js && concurrently -n \"BACKEND,FRONTEND\" -c \"green,yellow\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "setup:env": "node scripts/setup-env.js",
+    "dev": "npm run setup:env && npm run docker:up && node scripts/wait-for-db.js && concurrently -n \"BACKEND,FRONTEND\" -c \"green,yellow\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "docker:up": "docker-compose up -d",
