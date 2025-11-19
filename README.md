@@ -111,6 +111,7 @@ The application supports shipments within the United States, Canada, and Mexico,
 
 - **Docker** - Containerization for database
 - **Docker Compose** - Multi-container orchestration
+- **concurrently** - Run multiple npm scripts simultaneously
 - **nodemon** - Auto-reload for development
 - **ESLint** - Code linting
 
@@ -127,6 +128,7 @@ rose-rocket-assignment/
 │   │   ├── services/       # Business logic (geocoding, calculations)
 │   │   └── server.js       # Express app entry point
 │   ├── package.json
+│   ├── package-lock.json
 │   └── README.md
 │
 ├── frontend/               # Next.js application
@@ -136,16 +138,22 @@ rose-rocket-assignment/
 │   ├── data/               # Static data (popular cities)
 │   ├── public/             # Static assets (icons, flags)
 │   ├── package.json
+│   ├── package-lock.json
 │   └── README.md
 │
 ├── database/               # Database scripts
 │   ├── init/               # Initialization scripts
 │   ├── schema.sql          # Database schema
-│   └── test_connection.sql # Test queries
+│   ├── test_connection.sql # Test queries
+│   └── README.md
 │
-├── docker-compose.yml      # Docker configuration
-├── README.md              # This file
-└── SETUP_INSTRUCTIONS.md  # Detailed setup guide
+├── scripts/                # Utility scripts
+│   └── wait-for-db.js      # Database readiness checker
+│
+├── docker-compose.yml      # Docker configuration for PostgreSQL/PostGIS
+├── package.json            # Root package.json (orchestrates all services)
+├── PROJECT_PLAN.md         # Development plan and requirements
+└── README.md               # This file (main documentation)
 ```
 
 ## 📋 Prerequisites
@@ -153,9 +161,11 @@ rose-rocket-assignment/
 Before you begin, ensure you have the following installed:
 
 - **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
-- **npm** (comes with Node.js) or **yarn**
+- **npm** (comes with Node.js) or **pnpm**/**yarn**
 - **Docker Desktop** - [Download](https://www.docker.com/products/docker-desktop/)
 - **Git** - [Download](https://git-scm.com/)
+
+**Important:** Make sure Docker Desktop is running before executing `npm run dev`.
 
 ## 🚀 Quick Start
 
@@ -166,62 +176,85 @@ git clone git@github.com:Diferti/rose-rocket-assignment.git
 cd rose-rocket-assignment
 ```
 
-### 2. Start the Database
+### 2. Install All Dependencies
 
 ```bash
-docker-compose up -d
+npm install
 ```
 
-Wait a few seconds for PostgreSQL to initialize.
+This will automatically install:
+- Root dependencies (development tools)
+- Backend dependencies
+- Frontend dependencies
 
-### 3. Start the Backend
+### 3. Start Everything
 
 ```bash
-cd backend
-npm install
-cp .env.example .env  # Edit .env with your settings if needed
 npm run dev
 ```
 
-The backend will start on `http://localhost:3000`
+This single command will:
+- ✅ Start Docker containers (PostgreSQL database)
+- ✅ Wait for the database to be ready
+- ✅ Start the backend server on `http://localhost:3000`
+- ✅ Start the frontend server on `http://localhost:3001`
 
-### 4. Start the Frontend
+**That's it!** The application is now running. Open your browser and navigate to [http://localhost:3001](http://localhost:3001)
 
-Open a new terminal:
+### 4. Stop Everything
+
+To stop all services and Docker containers:
 
 ```bash
-cd frontend
-npm install
-cp .env.local.example .env.local  # Edit if backend is on different port
-npm run dev
+npm run docker:down
 ```
 
-The frontend will start on `http://localhost:3001`
+Or press `Ctrl+C` in the terminal where `npm run dev` is running.
 
-### 5. Open in Browser
+## 📜 Available Scripts
 
-Navigate to [http://localhost:3001](http://localhost:3001)
+The root `package.json` provides the following scripts:
+
+- **`npm install`** - Installs all dependencies (root, backend, and frontend)
+- **`npm run dev`** - Starts everything (Docker, backend, and frontend)
+- **`npm run dev:backend`** - Start only the backend server
+- **`npm run dev:frontend`** - Start only the frontend server
+- **`npm run docker:up`** - Start Docker containers
+- **`npm run docker:down`** - Stop Docker containers
+- **`npm run docker:logs`** - View Docker container logs
+
+**Note:** Running `npm run dev` automatically handles Docker startup and waits for the database to be ready before starting the backend and frontend services.
 
 ## 📖 Database Setup
 
-The project uses Docker to run PostgreSQL with PostGIS. The database is automatically initialized with the schema when the container starts.
+The project uses Docker to run PostgreSQL with PostGIS. The database is **automatically started and initialized** when you run `npm run dev`. No manual setup required!
 
 **Connection Details:**
 - Host: `localhost`
-- Port: `5432` (or `5433` if you changed it in docker-compose.yml)
+- Port: `5433` (external port, mapped from container port 5432)
 - Database: `shipment_quotes`
 - Username: `postgres`
 - Password: `postgres`
 
-**Verify Database:**
+**Manual Database Management:**
+
+If you need to manually manage the database:
+
 ```bash
+# Start database only
+npm run docker:up
+
+# Stop database
+npm run docker:down
+
+# View database logs
+npm run docker:logs
+
+# Verify database is running
 docker-compose exec postgres psql -U postgres -d shipment_quotes -c "SELECT PostGIS_version();"
 ```
 
-**Stop Database:**
-```bash
-docker-compose down
-```
+**Note:** The database schema is automatically initialized when the container starts for the first time. The initialization scripts are located in `database/init/`.
 
 ## 💻 Usage
 

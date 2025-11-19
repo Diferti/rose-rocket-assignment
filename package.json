@@ -1,0 +1,25 @@
+{
+  "name": "shipment-quote-calculator",
+  "version": "1.0.0",
+  "description": "Full-stack Shipment Quote Calculator application",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev": "npm run docker:up && node scripts/wait-for-db.js && concurrently -n \"BACKEND,FRONTEND\" -c \"green,yellow\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "postinstall": "npm run install:all"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+
