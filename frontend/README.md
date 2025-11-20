@@ -17,6 +17,7 @@ Modern Next.js 16 frontend application built with React 19, TypeScript, and Tail
 - [TypeScript](#typescript)
 - [Additional Resources](#additional-resources)
 
+<a id="features"></a>
 ## ✨ Features
 
 - ✅ **Quote Calculation Form**
@@ -55,6 +56,7 @@ Modern Next.js 16 frontend application built with React 19, TypeScript, and Tail
   - Loading indicators
   - Accessible form elements
 
+<a id="technologies"></a>
 ## 🛠 Technologies
 
 - **Next.js 16** - React framework with App Router
@@ -76,12 +78,14 @@ Modern Next.js 16 frontend application built with React 19, TypeScript, and Tail
 - **Tailwind CSS**: Rapid UI development, consistent design system, responsive utilities
 - **Leaflet**: Lightweight, open-source mapping library perfect for route visualization
 
+<a id="prerequisites"></a>
 ## 📋 Prerequisites
 
 - Node.js 18+ installed
 - npm or yarn package manager
 - Backend API running on `http://localhost:3000` (see [backend README](../backend/README.md))
 
+<a id="installation"></a>
 ## 📦 Installation
 
 1. **Navigate to frontend directory:**
@@ -101,6 +105,7 @@ Modern Next.js 16 frontend application built with React 19, TypeScript, and Tail
 
 4. **Edit `.env.local`** if your backend is on a different port (see [Configuration](#configuration))
 
+<a id="configuration"></a>
 ## ⚙️ Configuration
 
 Create a `.env.local` file in the `frontend` directory:
@@ -117,6 +122,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 
 **Note**: Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser.
 
+<a id="running-the-application"></a>
 ## 🚀 Running the Application
 
 ### Development Mode
@@ -129,6 +135,7 @@ The application will start on `http://localhost:3001` (Next.js default port).
 
 Open [http://localhost:3001](http://localhost:3001) in your browser.
 
+<a id="project-structure"></a>
 ## 📁 Project Structure
 
 ```
@@ -157,6 +164,7 @@ frontend/
 └── README.md
 ```
 
+<a id="components"></a>
 ## 🧩 Components
 
 - **QuoteForm** (`components/QuoteForm.tsx`) - Form for creating quotes with origin/destination autocomplete, equipment type selection, weight input, and date picker
@@ -164,6 +172,7 @@ frontend/
 - **QuoteHistory** (`components/QuoteHistory.tsx`) - Paginated list of all quotes with details view and export options
 - **RouteMap** (`components/RouteMap.tsx`) - Interactive Leaflet map showing route between origin and destination with markers
 
+<a id="api-integration"></a>
 ## 🔌 API Integration
 
 The frontend communicates with the backend API through the `api.ts` client.
@@ -182,6 +191,7 @@ The frontend communicates with the backend API through the `api.ts` client.
 - Network error detection
 - Validation error display
 
+<a id="styling"></a>
 ## 🎨 Styling
 
 ### Tailwind CSS
@@ -210,6 +220,7 @@ Highlight: #EBD9C3 (Light Cream)
 - **Tablet**: `md:` (≥ 768px)
 - **Desktop**: `lg:` (≥ 1024px)
 
+<a id="typescript"></a>
 ## 📘 TypeScript
 
 All code is fully typed with TypeScript:
@@ -250,6 +261,7 @@ interface Quote {
 }
 ```
 
+<a id="additional-resources"></a>
 ## 📚 Additional Resources
 
 - [Next.js Documentation](https://nextjs.org/docs)

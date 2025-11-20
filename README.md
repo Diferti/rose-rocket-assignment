@@ -10,12 +10,14 @@ A full-stack web application for calculating shipping quotes across North Americ
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [Available Scripts](#available-scripts)
 - [Database Setup](#database-setup)
 - [Usage](#usage)
 - [API Documentation](#api-documentation)
 - [Architecture](#architecture)
 - [Additional Documentation](#additional-documentation)
 
+<a id="description"></a>
 ## 📝 Description
 
 The Shipment Quote Calculator is a professional logistics application designed to help businesses and individuals calculate accurate shipping quotes for freight transportation across North America. The system:
@@ -28,6 +30,7 @@ The Shipment Quote Calculator is a professional logistics application designed t
 
 The application supports shipments within the United States, Canada, and Mexico, with validation to ensure all locations are within North America bounds.
 
+<a id="features"></a>
 ## ✨ Features
 
 ### Core Functionality
@@ -59,6 +62,7 @@ The application supports shipments within the United States, Canada, and Mexico,
   - Loading states and error handling
   - Modern, professional design
 
+<a id="technologies"></a>
 ## 🛠 Technologies
 
 ### Backend
@@ -115,6 +119,7 @@ The application supports shipments within the United States, Canada, and Mexico,
 - **nodemon** - Auto-reload for development
 - **ESLint** - Code linting
 
+<a id="project-structure"></a>
 ## 📁 Project Structure
 
 ```
@@ -158,6 +163,7 @@ rose-rocket-assignment/
 └── README.md               # This file (main documentation)
 ```
 
+<a id="prerequisites"></a>
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
@@ -170,6 +176,7 @@ Before you begin, ensure you have the following installed:
 **Important:** 
 - Make sure Docker Desktop is running before executing `npm run dev`
 
+<a id="quick-start"></a>
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository
@@ -219,6 +226,7 @@ npm run docker:down
 
 Or press `Ctrl+C` in the terminal where `npm run dev` is running.
 
+<a id="available-scripts"></a>
 ## 📜 Available Scripts
 
 The root `package.json` provides the following scripts:
@@ -238,6 +246,7 @@ The root `package.json` provides the following scripts:
 - Handles Docker startup with a custom PostGIS-enabled PostgreSQL image (ARM64 compatible)
 - Waits for the database to be ready before starting the backend and frontend services
 
+<a id="database-setup"></a>
 ## 📖 Database Setup
 
 The project uses Docker to run PostgreSQL with PostGIS. The database is **automatically started and initialized** when you run `npm run dev`. No manual setup required!
@@ -274,6 +283,7 @@ docker-compose exec postgres psql -U postgres -d shipment_quotes -c "SELECT Post
 - The database schema is automatically initialized when the container starts for the first time. The initialization scripts are located in `database/init/`.
 - Docker volumes persist data across container restarts. Use `npm run docker:reset` to completely wipe the database and start fresh (useful for testing or development).
 
+<a id="usage"></a>
 ## 💻 Usage
 
 ### Creating a Quote
@@ -315,6 +325,7 @@ docker-compose exec postgres psql -U postgres -d shipment_quotes -c "SELECT Post
 - Choose PDF or Excel format
 - Files are automatically downloaded
 
+<a id="api-documentation"></a>
 ## 📡 API Documentation
 
 The backend provides a RESTful API for quote management. All endpoints return JSON responses.
@@ -355,6 +366,7 @@ curl -X POST http://localhost:3000/api/quotes \
 
 **For complete API documentation** including request/response examples, error codes, and validation rules, see the [Backend README](./backend/README.md#api-endpoints).
 
+<a id="architecture"></a>
 ## 🏗 Architecture
 
 ### System Architecture
@@ -398,6 +410,7 @@ The `quotes` table stores:
 - Calculated values (distance, quote amount)
 - Timestamps
 
+<a id="additional-documentation"></a>
 ## 📚 Additional Documentation
 
 - [Backend README](./backend/README.md) - Backend-specific documentation

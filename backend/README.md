@@ -17,6 +17,7 @@ Node.js/Express RESTful API backend for the Shipment Quote Calculator applicatio
 - [Validation](#validation)
 - [Additional Resources](#additional-resources)
 
+<a id="features"></a>
 ## ✨ Features
 
 - ✅ **PostgreSQL Integration** - Connection pooling, PostGIS for geographic calculations, prepared statements
@@ -27,6 +28,7 @@ Node.js/Express RESTful API backend for the Shipment Quote Calculator applicatio
 - ✅ **Quote Calculation** - Distance-based pricing with equipment type multipliers and weight adjustments
 - ✅ **Error Handling** - Centralized error handling with consistent response format and HTTP status codes
 
+<a id="technologies"></a>
 ## 🛠 Technologies
 
 - **Node.js** (v18+) - JavaScript runtime
@@ -44,12 +46,14 @@ Node.js/Express RESTful API backend for the Shipment Quote Calculator applicatio
 - **PostgreSQL + PostGIS**: Industry standard for geographic data. PostGIS provides powerful spatial functions.
 - **express-validator**: Robust validation that integrates seamlessly with Express middleware.
 
+<a id="prerequisites"></a>
 ## 📋 Prerequisites
 
 - Node.js (v18 or higher)
 - PostgreSQL with PostGIS extension
 - Database running (see main project README for setup)
 
+<a id="installation"></a>
 ## 📦 Installation
 
 1. **Navigate to backend directory:**
@@ -75,6 +79,7 @@ Node.js/Express RESTful API backend for the Shipment Quote Calculator applicatio
    docker-compose up -d
    ```
 
+<a id="configuration"></a>
 ## ⚙️ Configuration
 
 Create a `.env` file in the `backend` directory:
@@ -108,6 +113,7 @@ MINIMUM_QUOTE=100.00
 | `BASE_RATE_PER_MILE` | Base rate per mile | `2.00` |
 | `MINIMUM_QUOTE` | Minimum quote amount | `100.00` |
 
+<a id="running-the-server"></a>
 ## 🚀 Running the Server
 
 ### Development Mode
@@ -126,6 +132,7 @@ npm start
 
 The server will start on `http://localhost:3000` (or the port specified in `.env`).
 
+<a id="api-endpoints"></a>
 ## 📡 API Endpoints
 
 ### Health Check
@@ -286,6 +293,7 @@ GET /api/quotes/:id
 }
 ```
 
+<a id="project-structure"></a>
 ## 📁 Project Structure
 
 ```
@@ -310,6 +318,7 @@ backend/
 └── README.md
 ```
 
+<a id="services"></a>
 ## 🔧 Services
 
 ### Geocoding Service
@@ -360,6 +369,7 @@ finalQuote = max(quoteWithWeight, MINIMUM_QUOTE)
 - Base threshold: 10,000 lbs
 - Additional: $0.10 per 100 lbs over threshold
 
+<a id="error-handling"></a>
 ## ⚠️ Error Handling
 
 All errors follow a consistent format:
@@ -380,6 +390,7 @@ All errors follow a consistent format:
 - `Database error` - Database operation failed (500)
 - `Internal server error` - Unexpected error (500)
 
+<a id="validation"></a>
 ## ✅ Validation
 
 All inputs are validated using `express-validator`:
@@ -399,6 +410,7 @@ All inputs are validated using `express-validator`:
 - **Total Weight**: Required, must be > 0
 - **Pickup Date**: Required, must be valid date, must be in the future
 
+<a id="additional-resources"></a>
 ## 📚 Additional Resources
 
 - [Express.js Documentation](https://expressjs.com/)

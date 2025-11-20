@@ -2,6 +2,16 @@
 
 PostgreSQL with PostGIS extension for the Shipment Quote Calculator.
 
+## 📋 Table of Contents
+
+- [Quick Start](#quick-start)
+- [Database Schema](#database-schema)
+- [Connection Details](#connection-details)
+- [Manual Installation](#manual-installation)
+- [Useful Commands](#useful-commands)
+- [Troubleshooting](#troubleshooting)
+
+<a id="quick-start"></a>
 ## 🚀 Quick Start
 
 ```bash
@@ -12,6 +22,7 @@ docker-compose up -d
 docker-compose exec postgres psql -U postgres -d shipment_quotes -c "SELECT PostGIS_version();"
 ```
 
+<a id="database-schema"></a>
 ## 📊 Database Schema
 
 ### `quotes` Table
@@ -50,6 +61,7 @@ Stores all shipment quotes with geographic data.
 **View:**
 - `quotes_with_distance` - Includes calculated distances from coordinates
 
+<a id="connection-details"></a>
 ## 🔌 Connection Details
 
 **Docker:**
@@ -68,6 +80,7 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 ```
 
+<a id="manual-installation"></a>
 ## 📦 Manual Installation
 
 1. Install [PostgreSQL](https://www.postgresql.org/download/) and [PostGIS](https://postgis.net/install/)
@@ -75,6 +88,7 @@ DB_PASSWORD=postgres
 3. Enable PostGIS: `psql -U postgres -d shipment_quotes -c "CREATE EXTENSION IF NOT EXISTS postgis;"`
 4. Initialize schema: `psql -U postgres -d shipment_quotes -f database/schema.sql`
 
+<a id="useful-commands"></a>
 ## 💻 Useful Commands
 
 ```bash
@@ -95,6 +109,7 @@ docker-compose exec postgres psql -U postgres -d shipment_quotes -c "\dx"
 docker-compose logs postgres
 ```
 
+<a id="troubleshooting"></a>
 ## 🔍 Troubleshooting
 
 **Port in use:** Change port in `docker-compose.yml` (default: 5433)
